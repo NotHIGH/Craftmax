@@ -49,6 +49,11 @@ jobs:
       - name: Configure and build Luanti
         shell: msys2 {0}
         run: |
+          # Recent MSYS2 CLANG64 omits the legacy archive, while the Windows
+          # linker still receives -lOLDNAMES from the MinGW runtime setup.
+          if [ ! -f /clang64/lib/libOLDNAMES.a ]; then
+            llvm-ar rcs /clang64/lib/libOLDNAMES.a
+          fi
           cmake -S engine -B build/luanti -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DRUN_IN_PLACE=TRUE \
