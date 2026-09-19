@@ -50,6 +50,8 @@ Do not place Craftmax inside another nested `Craftmax` directory.
 3. Restart Luanti if the game does not appear immediately.
 4. Create a new world and select `Craftmax` in the game list.
 
+For player-focused instructions, see [doc/PLAYER_GUIDE.md](doc/PLAYER_GUIDE.md).
+
 ## Run the game
 
 1. Start Luanti.
@@ -62,9 +64,24 @@ The current prototype uses the standard Luanti controls. Move, interact with
 nodes, open the inventory, and craft items using the key bindings configured by
 the Luanti installation.
 
+## Launch Craftmax directly
+
+The repository includes platform launchers that select Craftmax automatically:
+
+```sh
+./platforms/linux/craftmax.sh
+```
+
+On Windows, run `platforms/windows/craftmax.bat`. The launcher requires Luanti
+or Minetest to be installed. See [platforms/README.md](platforms/README.md)
+for the platform layout.
+
+For installation problems, see [doc/TROUBLESHOOTING.md](doc/TROUBLESHOOTING.md).
+
 ## Current prototype
 
-- Procedurally generated plains biome
+- Four procedurally generated biomes: plains, forest, ocean, and desert
+- Generated trees, desert cacti, and custom water
 - Grass, dirt, stone, sand, wood, leaves, coal ore, and campfires
 - Apple food item and hunger system
 - Stone pickaxe and basic crafting recipes
@@ -74,8 +91,10 @@ the Luanti installation.
 
 ### World generation
 
-Craftmax registers a plains biome with grass, dirt, and stone layers. Coal ore is
-generated below the surface using the Luanti ore API.
+Craftmax registers plains, forest, ocean, and desert biomes. Forest and plains
+biomes generate trees, while deserts generate cacti. Ocean areas use Craftmax
+water and sand shore layers. Coal ore is generated below the surface using the
+Luanti ore API.
 
 ### Resources and crafting
 
@@ -93,31 +112,52 @@ The current value is displayed in the HUD and can also be checked with:
 /hunger
 ```
 
+## Included mods
+
+Craftmax includes the following external survival mods in `mods/`:
+
+- `mobs` (Mobs Redo): mob API used by the creature mods. MIT licensed.
+- `mobs_monster`: hostile monsters for exploration and night survival. MIT
+	licensed and depends on `mobs`.
+- `mobs_animal`: farm animals and wildlife. MIT licensed and depends on `mobs`.
+- `farming`: plants, crops, food, seeds, and farming tools. MIT licensed.
+- `xcompat`: compatibility library required by Basic Materials. MIT licensed.
+- `basic_materials`: steel bars, chains, wire, plastic, and other basic
+	materials. LGPL-3.0-only and depends on `xcompat`.
+
+The original license files are kept inside each mod directory. These mods come
+from the [TenPlus1 Codeberg repositories](https://codeberg.org/tenplus1).
+Craftmax may need a compatibility layer for some mod drops and interactions
+because it uses custom `craftmax_core:*` items instead of the standard
+`default:*` namespace. Craftmax's own coal ore remains the base ore for now;
+no oversized third-party ore pack is enabled.
+
 ## Project structure
 
 ```text
 Craftmax/
 ├── game.conf
 ├── README.md
+├── clientmods/
+├── doc/
+├── locale/
+├── menu/
+├── platforms/
+├── src/
+├── textures/
 └── mods/
 	└── craftmax_core/
 		├── init.lua
-		├── mod.conf
-		├── src/
-		│   ├── api.lua
-		│   ├── crafting.lua
-		│   ├── items.lua
-		│   ├── nodes.lua
-		│   ├── survival.lua
-		│   ├── tools.lua
-		│   └── world.lua
-		├── textures/
-		├── locale/
-		└── doc/
+		└── mod.conf
 ```
 
-`init.lua` is the module loader. Gameplay code is kept in `src/` and split by
-responsibility:
+`mods/` contains loadable server-side game mods. `clientmods/` is reserved for
+mods that run only on player clients. Platform launchers and packaging notes
+are kept in `platforms/`. Shared documentation, translations, textures, and
+source code are kept at the project level.
+
+`init.lua` loads gameplay code from the root `src/` directory. The source is
+split by responsibility:
 
 - `api.lua` contains shared registration helpers.
 - `nodes.lua` registers blocks and the campfire.
@@ -125,15 +165,18 @@ responsibility:
 - `tools.lua` registers tools and tool capabilities.
 - `crafting.lua` registers recipes.
 - `world.lua` registers biomes and ores.
+- `trees.lua` registers tree and cactus decorations.
 - `survival.lua` manages hunger, HUD updates, and starvation damage.
 
-Textures belong in `textures/`, translation files belong in `locale/`, and
+Textures belong in `textures/`, including the CC0 Kenney source pack and the
+Craftmax-mapped files used by nodes. Translation files belong in `locale/`, and
 module documentation belongs in `doc/`.
 
 ## Development
 
-Make changes inside `mods/craftmax_core/`. Keep new gameplay features in a
-focused module instead of adding more logic to `init.lua`.
+Make gameplay changes inside `src/` and keep `mods/craftmax_core/init.lua` as a
+small loader. Server-side mods belong in `mods/`; client-only mods belong in
+`clientmods/`.
 
 Before opening a pull request:
 

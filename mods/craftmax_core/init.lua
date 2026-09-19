@@ -1,5 +1,6 @@
 local modpath = minetest.get_modpath(minetest.get_current_modname())
-local api = dofile(modpath .. "/src/api.lua")
+local srcpath = modpath .. "/../../src"
+local api = dofile(srcpath .. "/api.lua")
 
 for _, module_name in ipairs({
 	"nodes",
@@ -7,7 +8,8 @@ for _, module_name in ipairs({
 	"tools",
 	"crafting",
 	"world",
+	"trees",
 	"survival",
 }) do
-	dofile(modpath .. "/src/" .. module_name .. ".lua")(api)
+	dofile(srcpath .. "/" .. module_name .. ".lua")(api)
 end
