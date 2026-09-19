@@ -1,0 +1,58 @@
+name: Build Craftmax Linux package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Craftmax and Luanti engine
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ make cmake libpng-dev libjpeg-dev libgl1-mesa-dev \
+            libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev \
+            libcurl4-gnutls-dev libfreetype6-dev zlib1g-dev libgmp-dev \
+            libjsoncpp-dev libzstd-dev libluajit-5.1-dev gettext libsdl2-dev
+
+      - name: Configure and build Luanti
+        run: |
+          cmake -S engine -B build/luanti \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DRUN_IN_PLACE=TRUE \
+            -DENABLE_LTO=OFF \
+            -DBUILD_DOCUMENTATION=OFF \
+            -DBUILD_UNITTESTS=OFF
+          cmake --build build/luanti --parallel
+
+      - name: Bundle Craftmax
+        run: |
+          set -e
+          engine_root="$(pwd)/build/luanti"
+          mkdir -p "$engine_root/games/Craftmax"
+          tar --exclude='./engine' \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./build' \
+            -cf - . | tar -xf - -C "$engine_root/games/Craftmax"
+          tar -C "$engine_root" -czf build/Craftmax-Linux-x64.tar.gz .
+
+      - name: Upload Linux package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Craftmax-Linux-x64
+          path: build/Craftmax-Linux-x64.tar.gz
+          if-no-files-found: error
