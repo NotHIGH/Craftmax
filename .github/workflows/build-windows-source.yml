@@ -1,0 +1,81 @@
+name: Build Craftmax from source
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "engine-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-source:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Craftmax and Luanti engine
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MSYS2 dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: CLANG64
+          update: true
+          install: >-
+            git
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-ninja
+            mingw-w64-clang-x86_64-curl-winssl
+            mingw-w64-clang-x86_64-libpng
+            mingw-w64-clang-x86_64-libjpeg-turbo
+            mingw-w64-clang-x86_64-freetype
+            mingw-w64-clang-x86_64-libogg
+            mingw-w64-clang-x86_64-libvorbis
+            mingw-w64-clang-x86_64-sqlite3
+            mingw-w64-clang-x86_64-openal
+            mingw-w64-clang-x86_64-zstd
+            mingw-w64-clang-x86_64-gettext
+            mingw-w64-clang-x86_64-luajit
+            mingw-w64-clang-x86_64-SDL2
+
+      - name: Configure and build Luanti
+        shell: msys2 {0}
+        run: |
+          cmake -S engine -B build/luanti -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DRUN_IN_PLACE=TRUE \
+            -DENABLE_CURSES=OFF \
+            -DBUILD_DOCUMENTATION=OFF
+          cmake --build build/luanti --parallel
+
+      - name: Bundle runtime and Craftmax game
+        shell: msys2 {0}
+        run: |
+          set -e
+          engine_exe=$(find build/luanti -type f -name luanti.exe | head -n 1)
+          test -n "$engine_exe"
+          engine_bin=$(dirname "$engine_exe")
+          engine_root=$(dirname "$engine_bin")
+
+          bash engine/util/bundle_dlls.sh "$engine_exe" "$engine_bin"
+          mkdir -p "$engine_root/games/Craftmax"
+          tar --exclude='./engine' \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./build' \
+            -cf - . | tar -xf - -C "$engine_root/games/Craftmax"
+
+          mkdir -p build
+          (cd "$engine_root" && 7z a -tzip \
+            "$GITHUB_WORKSPACE/build/Craftmax-Windows-source-x64.zip" .)
+
+      - name: Upload source-built package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Craftmax-Windows-source-x64
+          path: build/Craftmax-Windows-source-x64.zip
+          if-no-files-found: error

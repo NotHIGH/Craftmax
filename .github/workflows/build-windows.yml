@@ -1,0 +1,36 @@
+name: Build Craftmax Windows package
+
+on:
+  workflow_dispatch:
+    inputs:
+      luanti_version:
+        description: Luanti release version
+        required: false
+        default: 5.17.0
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  package-windows:
+    runs-on: windows-latest
+    env:
+      LUANTI_VERSION: ${{ inputs.luanti_version || '5.17.0' }}
+
+    steps:
+      - name: Checkout Craftmax
+        uses: actions/checkout@v4
+
+      - name: Build Windows package
+        shell: pwsh
+        run: ./platforms/windows/build.ps1
+
+      - name: Upload Craftmax Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Craftmax-Windows-x64
+          path: build/Craftmax-Windows-x64.zip
+          if-no-files-found: error

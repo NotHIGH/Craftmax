@@ -76,6 +76,12 @@ On Windows, run `platforms/windows/craftmax.bat`. The launcher requires Luanti
 or Minetest to be installed. See [platforms/README.md](platforms/README.md)
 for the platform layout.
 
+The Windows GitHub Actions workflows provide two packages: a fast runtime
+package and a source-built package. The source workflow compiles the pinned
+Luanti engine in `engine/`, bundles DLLs, and produces
+`Craftmax-Windows-source-x64.zip` containing `bin/luanti.exe` and
+`games/Craftmax/`.
+
 For installation problems, see [doc/TROUBLESHOOTING.md](doc/TROUBLESHOOTING.md).
 
 ## Current prototype
