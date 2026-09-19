@@ -18,6 +18,10 @@ from `engine/` with MSYS2/Clang, bundles its DLLs, and uploads
 `Craftmax-Windows-source-x64.zip`. Run it manually or push a tag beginning with
 `engine-v`.
 
+The same source workflow also runs Inno Setup and uploads
+`Craftmax-Setup.exe`. The installer adds Start Menu and desktop shortcuts and
+starts `bin/luanti.exe` with the bundled Craftmax game.
+
 Build the same package locally with PowerShell:
 
 ```powershell

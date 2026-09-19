@@ -79,3 +79,29 @@ jobs:
           name: Craftmax-Windows-source-x64
           path: build/Craftmax-Windows-source-x64.zip
           if-no-files-found: error
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $staging = Join-Path $env:RUNNER_TEMP "Craftmax-installer-source"
+          $output = Join-Path $env:GITHUB_WORKSPACE "build/installer"
+          Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item $staging -ItemType Directory -Force | Out-Null
+          New-Item $output -ItemType Directory -Force | Out-Null
+          Expand-Archive -Path "$env:GITHUB_WORKSPACE/build/Craftmax-Windows-source-x64.zip" -DestinationPath $staging -Force
+          $env:CRAFTMAX_VERSION = "0.1.0"
+          $env:CRAFTMAX_INSTALLER_SOURCE = $staging
+          $env:CRAFTMAX_INSTALLER_OUTPUT = $output
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup 6 was not found on the GitHub runner."
+          }
+          & $iscc "$env:GITHUB_WORKSPACE/platforms/windows/installer/Craftmax.iss"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Craftmax-Windows-Setup
+          path: build/installer/Craftmax-Setup.exe
+          if-no-files-found: error
