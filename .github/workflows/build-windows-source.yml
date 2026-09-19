@@ -26,6 +26,10 @@ jobs:
           update: true
           install: >-
             git
+            mingw-w64-clang-x86_64-crt
+            mingw-w64-clang-x86_64-headers
+            mingw-w64-clang-x86_64-libwinpthread
+            mingw-w64-clang-x86_64-winpthreads
             mingw-w64-clang-x86_64-clang
             mingw-w64-clang-x86_64-cmake
             mingw-w64-clang-x86_64-ninja
@@ -49,6 +53,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DRUN_IN_PLACE=TRUE \
             -DENABLE_CURSES=OFF \
+            -DENABLE_LTO=OFF \
             -DBUILD_DOCUMENTATION=OFF
           cmake --build build/luanti --parallel
 
